@@ -963,9 +963,14 @@ async function uploadFile(event) {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({
-          action:"upload",userId,
-          fileName:file.name,fileContent:base64,fileType:file.type
-        })
+  action:"upload",
+  userId,
+  userName,
+  userEmail,
+  fileName:file.name,
+  fileContent:base64,
+  fileType:file.type
+})
       });
       const data = await res.json();
       if (res.ok) {
