@@ -1047,7 +1047,10 @@ function renderFiles(files){
         <div class="fic">${fileIco(f.fileType)}</div>
         <div><div class="fname">${f.fileName||"Unknown"}</div><div class="ftype">${f.fileType||"unknown"}</div></div>
       </div></td>
-      <td class="mono">${(f.userId||f.user_id||"N/A").slice(0,16)}...</td>
+      <td>
+  <div class="uname">${f.userName || "Unknown User"}</div>
+  <div class="uemail">${f.userEmail || "No Email"}</div>
+   </td>
       <td class="mono">${fmtDate(f.uploadedAt)}</td>
       <td><span class="tag tag-g">active</span></td>
       <td class="mono">${(f.file_id||"").slice(0,16)}...</td>
