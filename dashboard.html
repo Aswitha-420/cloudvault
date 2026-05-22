@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CloudVault — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{
+      --primary:#6366f1;
+      --primary-dark:#4f46e5;
+      --secondary:#06b6d4;
+      --dark:#0f0f1a;
+      --card:#1a1a2e;
+      --text:#e2e8f0;
+      --muted:#94a3b8;
+      --border:rgba(255,255,255,0.08);
+      --success:#10b981;
+      --danger:#ef4444;
+      --warning:#f59e0b;
+    }
+    body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;transition:background 0.3s,color 0.3s;}
+    body.light{--dark:#f1f5f9;--card:#ffffff;--text:#1e293b;--muted:#64748b;--border:rgba(0,0,0,0.08);}
+
+    /* ── NAVBAR ── */
+    nav{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:0 40px;height:64px;
+      background:rgba(26,26,46,0.97);
+      border-bottom:1px solid var(--border);
+      backdrop-filter:blur(20px);
+      position:sticky;top:0;z-index:200;
+      transition:background 0.3s;
+    }
+    body.light nav{background:rgba(255,255,255,0.97);}
+    .nav-left{display:flex;align-items:center;gap:32px;}
+    .nav-logo{
+      display:flex;align-items:center;gap:8px;
+      font-size:20px;font-weight:800;
+      background:linear-gradient(135deg,var(--primary),var(--secondary));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      text-decoration:none;
+    }
+    .nav-logo span{font-size:26px;}
+
+    /* Storage bar in nav */
+    .nav-storage{
+      display:flex;align-items:center;gap:10px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid var(--border);
+      border-radius:10px;padding:8px 14px;
+      min-width:200px;
+    }
+    .nav-storage .storage-icon{font-size:16px;}
+    .nav-storage-info{flex:1;}
+    .nav-storage-label{
+      display:flex;justify-content:space-between;
+      font-size:11px;color:var(--muted);margin-bottom:5px;
+    }
+    .nav-storage-bar{
+      height:5px;background:rgba(255,255,255,0.1);
+      border-radius:50px;overflow:hidden;
+    }
+    .nav-storage-fill{
+      height:100%;border-radius:50px;
+      background:linear-gradient(90deg,var(--primary),var(--secondary));
+      transition:width 1s ease;
+    }
+
+    .nav-right{display:flex;align-items:center;gap:8px;}
+
+    /* Notification bell */
+    .notif-btn{
+      position:relative;
+      width:40px;height:40px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid var(--border);
+      border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;font-size:18px;
+      transition:all 0.3s;
+    }
+    .notif-btn:hover{border-color:var(--primary);background:rgba(99,102,241,0.1);}
+    .notif-badge{
+      position:absolute;top:-4px;right:-4px;
+      width:18px;height:18px;
+      background:var(--danger);
+      border-radius:50%;
+      font-size:10px;font-weight:700;color:white;
+      display:flex;align-items:center;justify-content:center;
+      border:2px solid var(--dark);
+    }
+
+    /* Notification dropdown */
+    .notif-dropdown{
+      position:absolute;top:54px;right:0;
+      width:320px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:16px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.4);
+      display:none;z-index:300;
+      overflow:hidden;
+    }
+    .notif-dropdown.show{display:block;}
+    .notif-header{
+      padding:16px 20px;
+      border-bottom:1px solid var(--border);
+      display:flex;justify-content:space-between;align-items:center;
+    }
+    .notif-header h4{font-size:15px;font-weight:600;}
+    .mark-read{
+      font-size:12px;color:var(--primary);cursor:pointer;
+      background:none;border:none;font-family:'Inter',sans-serif;
+    }
+    .notif-item{
+      padding:14px 20px;
+      border-bottom:1px solid rgba(255,255,255,0.03);
+      display:flex;gap:12px;align-items:flex-start;
+      transition:background 0.2s;cursor:pointer;
+    }
+    .notif-item:hover{background:rgba(255,255,255,0.02);}
+    .notif-item.unread{background:rgba(99,102,241,0.05);}
+    .notif-dot{
+      width:8px;height:8px;border-radius:50%;
+      background:var(--primary);margin-top:5px;flex-shrink:0;
+    }
+    .notif-dot.read{background:transparent;border:1px solid var(--muted);}
+    .notif-text{font-size:13px;line-height:1.5;}
+    .notif-time{font-size:11px;color:var(--muted);margin-top:3px;}
+
+    /* Theme toggle */
+    .theme-btn{
+      width:40px;height:40px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid var(--border);
+      border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;font-size:18px;
+      transition:all 0.3s;
+    }
+    .theme-btn:hover{border-color:var(--primary);background:rgba(99,102,241,0.1);}
+
+    /* Profile dropdown */
+    .profile-wrap{position:relative;}
+    .profile-btn{
+      display:flex;align-items:center;gap:10px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid var(--border);
+      border-radius:12px;padding:7px 14px;
+      cursor:pointer;transition:all 0.3s;
+    }
+    .profile-btn:hover{border-color:var(--primary);}
+    .profile-avatar{
+      width:32px;height:32px;
+      background:linear-gradient(135deg,var(--primary),var(--secondary));
+      border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:14px;font-weight:700;color:white;
+    }
+    .profile-name{font-size:14px;font-weight:500;}
+    .profile-arrow{font-size:12px;color:var(--muted);transition:transform 0.3s;}
+    .profile-arrow.open{transform:rotate(180deg);}
+
+    .profile-dropdown{
+      position:absolute;top:54px;right:0;
+      width:240px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:16px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.4);
+      display:none;z-index:300;
+      overflow:hidden;
+    }
+    .profile-dropdown.show{display:block;}
+    .profile-header{
+      padding:16px 20px;
+      border-bottom:1px solid var(--border);
+      background:rgba(99,102,241,0.05);
+    }
+    .profile-header .ph-name{font-size:15px;font-weight:600;}
+    .profile-header .ph-email{font-size:12px;color:var(--muted);margin-top:2px;}
+    .profile-header .ph-role{
+      display:inline-block;
+      margin-top:8px;
+      padding:3px 10px;
+      background:rgba(99,102,241,0.15);
+      border-radius:50px;
+      font-size:11px;color:var(--primary);font-weight:600;
+    }
+    .dropdown-item{
+      display:flex;align-items:center;gap:12px;
+      padding:13px 20px;
+      font-size:14px;cursor:pointer;
+      transition:background 0.2s;
+      border:none;width:100%;
+      background:transparent;color:var(--text);
+      font-family:'Inter',sans-serif;
+      text-align:left;
+    }
+    .dropdown-item:hover{background:rgba(255,255,255,0.04);}
+    .dropdown-item .di-icon{font-size:17px;width:24px;}
+    .dropdown-divider{height:1px;background:var(--border);margin:4px 0;}
+    .dropdown-item.danger{color:var(--danger);}
+    .dropdown-item.danger:hover{background:rgba(239,68,68,0.08);}
+
+    /* ── MAIN ── */
+    .main{padding:32px 40px;}
+
+    /* Welcome */
+    .welcome-banner{
+      background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(6,182,212,0.08));
+      border:1px solid rgba(99,102,241,0.2);
+      border-radius:20px;padding:28px 36px;
+      margin-bottom:28px;
+      display:flex;justify-content:space-between;align-items:center;
+      flex-wrap:wrap;gap:16px;
+      position:relative;overflow:hidden;
+    }
+    .welcome-banner::after{
+      content:'☁️';position:absolute;right:36px;top:50%;
+      transform:translateY(-50%);font-size:90px;opacity:0.07;
+    }
+    .welcome-text h2{font-size:22px;font-weight:700;margin-bottom:5px;}
+    .welcome-text p{font-size:13px;color:var(--muted);}
+    .welcome-text span{color:var(--primary);font-weight:600;}
+
+    /* Storage card in welcome */
+    .storage-card{
+      background:rgba(255,255,255,0.05);
+      border:1px solid var(--border);
+      border-radius:14px;padding:16px 20px;
+      min-width:220px;
+    }
+    .storage-card-title{
+      display:flex;align-items:center;gap:8px;
+      font-size:13px;color:var(--muted);margin-bottom:10px;
+    }
+    .storage-card-bar{
+      height:8px;background:rgba(255,255,255,0.1);
+      border-radius:50px;overflow:hidden;margin-bottom:8px;
+    }
+    .storage-card-fill{
+      height:100%;border-radius:50px;
+      background:linear-gradient(90deg,var(--primary),var(--secondary));
+      transition:width 1.5s ease;
+    }
+    .storage-card-text{
+      display:flex;justify-content:space-between;
+      font-size:12px;color:var(--muted);
+    }
+
+    /* Stats */
+    .stats-row{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:16px;margin-bottom:28px;
+    }
+    .stat-card{
+      background:var(--card);border:1px solid var(--border);
+      border-radius:16px;padding:22px;
+      display:flex;align-items:center;gap:14px;
+      transition:all 0.3s;
+    }
+    .stat-card:hover{border-color:var(--primary);transform:translateY(-2px);}
+    .stat-icon{
+      width:46px;height:46px;border-radius:12px;
+      display:flex;align-items:center;justify-content:center;font-size:20px;
+    }
+    .stat-icon.purple{background:rgba(99,102,241,0.15);}
+    .stat-icon.cyan{background:rgba(6,182,212,0.15);}
+    .stat-icon.green{background:rgba(16,185,129,0.15);}
+    .stat-icon.orange{background:rgba(245,158,11,0.15);}
+    .stat-info h3{font-size:22px;font-weight:700;}
+    .stat-info p{font-size:12px;color:var(--muted);}
+
+    /* Alerts */
+    .alert{
+      padding:13px 16px;border-radius:12px;font-size:13px;
+      margin-bottom:20px;display:none;align-items:center;gap:10px;
+    }
+    .alert-success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#10b981;}
+    .alert-error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;}
+
+    /* Upload */
+    .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+    .section-title{font-size:17px;font-weight:700;}
+    .section-sub{font-size:13px;color:var(--muted);margin-top:3px;}
+
+    .upload-area{
+      background:var(--card);border:2px dashed rgba(99,102,241,0.3);
+      border-radius:20px;padding:36px;text-align:center;
+      margin-bottom:28px;transition:all 0.3s;cursor:pointer;
+    }
+    .upload-area:hover,.upload-area.dragover{
+      border-color:var(--primary);background:rgba(99,102,241,0.05);
+    }
+    .upload-icon{font-size:46px;margin-bottom:10px;display:block;}
+    .upload-area h3{font-size:17px;font-weight:600;margin-bottom:6px;}
+    .upload-area p{font-size:13px;color:var(--muted);margin-bottom:18px;}
+    .upload-btn{
+      display:inline-block;padding:11px 28px;
+      background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+      color:white;border:none;border-radius:10px;
+      font-size:14px;font-weight:600;cursor:pointer;
+      transition:all 0.3s;font-family:'Inter',sans-serif;
+    }
+    .upload-btn:hover{opacity:0.9;transform:translateY(-1px);}
+    #fileInput{display:none;}
+    .progress-wrap{display:none;margin-top:16px;}
+    .progress-bar{background:rgba(255,255,255,0.1);border-radius:50px;height:8px;overflow:hidden;}
+    .progress-fill{
+      height:100%;border-radius:50px;width:0%;
+      background:linear-gradient(90deg,var(--primary),var(--secondary));
+      animation:progressAnim 2s ease forwards;
+    }
+    @keyframes progressAnim{to{width:100%;}}
+    .progress-text{font-size:13px;color:var(--muted);margin-top:8px;text-align:left;}
+
+    /* Files */
+    .files-section{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;}
+    .files-header{
+      padding:18px 24px;border-bottom:1px solid var(--border);
+      display:flex;justify-content:space-between;align-items:center;
+    }
+    .files-header h3{font-size:15px;font-weight:600;}
+    .refresh-btn{
+      padding:7px 14px;background:rgba(99,102,241,0.1);
+      border:1px solid rgba(99,102,241,0.2);color:var(--primary);
+      border-radius:8px;font-size:13px;cursor:pointer;
+      transition:all 0.3s;font-family:'Inter',sans-serif;font-weight:500;
+    }
+    .refresh-btn:hover{background:rgba(99,102,241,0.2);}
+    .files-table{width:100%;border-collapse:collapse;}
+    .files-table th{
+      padding:12px 24px;text-align:left;font-size:11px;
+      font-weight:500;color:var(--muted);text-transform:uppercase;
+      letter-spacing:0.5px;border-bottom:1px solid var(--border);
+      background:rgba(255,255,255,0.02);
+    }
+    .files-table td{
+      padding:14px 24px;font-size:14px;
+      border-bottom:1px solid rgba(255,255,255,0.04);
+      vertical-align:middle;
+    }
+    .files-table tr:last-child td{border-bottom:none;}
+    .files-table tr:hover td{background:rgba(255,255,255,0.02);}
+    .file-name-cell{display:flex;align-items:center;gap:12px;}
+    .file-type-icon{
+      width:38px;height:38px;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;flex-shrink:0;
+    }
+    .file-type-icon.img{background:rgba(99,102,241,0.15);}
+    .file-type-icon.doc{background:rgba(6,182,212,0.15);}
+    .file-type-icon.vid{background:rgba(245,158,11,0.15);}
+    .file-type-icon.aud{background:rgba(16,185,129,0.15);}
+    .file-type-icon.other{background:rgba(148,163,184,0.15);}
+    .file-name{font-weight:500;font-size:14px;}
+    .file-date{font-size:11px;color:var(--muted);margin-top:2px;}
+    .action-btns{display:flex;gap:8px;flex-wrap:wrap;}
+    .action-btn{
+      padding:6px 12px;border-radius:8px;font-size:12px;
+      font-weight:600;cursor:pointer;border:none;
+      transition:all 0.3s;font-family:'Inter',sans-serif;
+    }
+    .btn-download{background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.2);}
+    .btn-download:hover{background:rgba(16,185,129,0.2);}
+    .btn-share{background:rgba(6,182,212,0.1);color:var(--secondary);border:1px solid rgba(6,182,212,0.2);}
+    .btn-share:hover{background:rgba(6,182,212,0.2);}
+    .btn-delete{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);}
+    .btn-delete:hover{background:rgba(239,68,68,0.2);}
+    .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+    .empty-state span{font-size:60px;display:block;margin-bottom:16px;opacity:0.4;}
+    .empty-state h3{font-size:18px;font-weight:600;margin-bottom:8px;color:var(--text);}
+    .loading{text-align:center;padding:40px;color:var(--muted);}
+    .spinner{
+      display:inline-block;width:22px;height:22px;
+      border:2px solid var(--border);border-top:2px solid var(--primary);
+      border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:10px;
+    }
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    /* ── MODALS ── */
+    .modal-overlay{
+      position:fixed;top:0;left:0;width:100%;height:100%;
+      background:rgba(0,0,0,0.7);display:none;
+      align-items:center;justify-content:center;
+      z-index:1000;backdrop-filter:blur(4px);
+    }
+    .modal-overlay.show{display:flex;}
+    .modal{
+      background:var(--card);border:1px solid var(--border);
+      border-radius:20px;padding:32px;width:90%;max-width:480px;
+    }
+    .modal h3{font-size:18px;font-weight:700;margin-bottom:6px;}
+    .modal p{font-size:13px;color:var(--muted);margin-bottom:20px;}
+    .share-link-box{display:flex;gap:10px;}
+    .share-link-input{
+      flex:1;padding:12px 16px;
+      background:rgba(255,255,255,0.04);border:1px solid var(--border);
+      border-radius:10px;color:var(--text);font-size:13px;
+      font-family:'Inter',sans-serif;outline:none;
+    }
+    .copy-btn{
+      padding:12px 18px;
+      background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+      color:white;border:none;border-radius:10px;
+      font-size:13px;font-weight:600;cursor:pointer;
+      font-family:'Inter',sans-serif;white-space:nowrap;
+    }
+    .expire-note{font-size:12px;color:var(--warning);margin-top:10px;}
+    .modal-close{
+      width:100%;padding:12px;margin-top:12px;
+      background:rgba(255,255,255,0.04);border:1px solid var(--border);
+      color:var(--muted);border-radius:10px;font-size:14px;
+      cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.3s;
+    }
+    .modal-close:hover{border-color:var(--primary);color:var(--primary);}
+
+    /* Profile modal */
+    .profile-modal-avatar{
+      width:80px;height:80px;
+      background:linear-gradient(135deg,var(--primary),var(--secondary));
+      border-radius:50%;display:flex;align-items:center;
+      justify-content:center;font-size:32px;font-weight:700;
+      color:white;margin:0 auto 16px;
+    }
+    .profile-modal-name{text-align:center;font-size:20px;font-weight:700;margin-bottom:4px;}
+    .profile-modal-email{text-align:center;font-size:13px;color:var(--muted);margin-bottom:20px;}
+    .profile-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+    .profile-info-item{
+      background:rgba(255,255,255,0.04);border:1px solid var(--border);
+      border-radius:12px;padding:14px;
+    }
+    .profile-info-item .pii-label{font-size:11px;color:var(--muted);margin-bottom:4px;}
+    .profile-info-item .pii-val{font-size:14px;font-weight:600;}
+
+    /* Settings modal */
+    .settings-item{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:16px 0;border-bottom:1px solid var(--border);
+    }
+    .settings-item:last-child{border-bottom:none;}
+    .settings-item-left h4{font-size:14px;font-weight:600;margin-bottom:3px;}
+    .settings-item-left p{font-size:12px;color:var(--muted);}
+    .toggle-switch{
+      position:relative;width:44px;height:24px;
+      background:rgba(255,255,255,0.1);border-radius:50px;
+      cursor:pointer;transition:background 0.3s;border:none;
+    }
+    .toggle-switch.on{background:var(--primary);}
+    .toggle-switch::after{
+      content:'';position:absolute;
+      width:18px;height:18px;background:white;border-radius:50%;
+      top:3px;left:3px;transition:left 0.3s;
+    }
+    .toggle-switch.on::after{left:23px;}
+
+    @media(max-width:768px){
+      .main{padding:20px;}
+      nav{padding:0 20px;}
+      .nav-storage{display:none;}
+      .files-table th:nth-child(2),.files-table td:nth-child(2){display:none;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">
+      <span>☁️</span>CloudVault
+    </a>
+    <!-- Storage bar in nav -->
+    <div class="nav-storage">
+      <span class="storage-icon">🗄️</span>
+      <div class="nav-storage-info">
+        <div class="nav-storage-label">
+          <span>Storage</span>
+          <span id="navStorageText">0 files</span>
+        </div>
+        <div class="nav-storage-bar">
+          <div class="nav-storage-fill" id="navStorageFill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-right">
+    <!-- Notification bell -->
+    <div style="position:relative;">
+      <div class="notif-btn" id="notifBtn" onclick="toggleNotif()">
+        🔔
+        <div class="notif-badge" id="notifBadge">3</div>
+      </div>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header">
+          <h4>Notifications</h4>
+          <button class="mark-read" onclick="markAllRead()">Mark all read</button>
+        </div>
+        <div class="notif-item unread" onclick="markRead(this)">
+          <div class="notif-dot"></div>
+          <div>
+            <div class="notif-text">☁️ Welcome to CloudVault! Start uploading your files.</div>
+            <div class="notif-time">Just now</div>
+          </div>
+        </div>
+        <div class="notif-item unread" onclick="markRead(this)">
+          <div class="notif-dot"></div>
+          <div>
+            <div class="notif-text">🔒 Your account is secured with SHA-256 encryption.</div>
+            <div class="notif-time">2 mins ago</div>
+          </div>
+        </div>
+        <div class="notif-item unread" onclick="markRead(this)">
+          <div class="notif-dot"></div>
+          <div>
+            <div class="notif-text">📡 Connected to AWS ap-south-1 (Mumbai) region.</div>
+            <div class="notif-time">5 mins ago</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dark/Light toggle -->
+    <div class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme">🌙</div>
+
+    <!-- Profile dropdown -->
+    <div class="profile-wrap">
+      <div class="profile-btn" onclick="toggleProfile()" id="profileBtn">
+        <div class="profile-avatar" id="profileAvatar">?</div>
+        <span class="profile-name" id="profileName">User</span>
+        <span class="profile-arrow" id="profileArrow">▾</span>
+      </div>
+      <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-header">
+          <div class="ph-name" id="dropdownName">User</div>
+          <div class="ph-email" id="dropdownEmail">user@email.com</div>
+          <span class="ph-role">👤 Standard User</span>
+        </div>
+        <button class="dropdown-item" onclick="openProfileModal()">
+          <span class="di-icon">👤</span> View Profile
+        </button>
+        <button class="dropdown-item" onclick="openStorageModal()">
+          <span class="di-icon">☁️</span> My Storage
+        </button>
+        <button class="dropdown-item" onclick="openSettingsModal()">
+          <span class="di-icon">⚙️</span> Settings
+        </button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item danger" onclick="logout()">
+          <span class="di-icon">🚪</span> Sign Out
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- Welcome banner -->
+  <div class="welcome-banner">
+    <div class="welcome-text">
+      <h2>Welcome back, <span id="welcomeName">User</span>! 👋</h2>
+      <p>Your files are securely stored on AWS S3 — Mumbai Region</p>
+    </div>
+    <div class="storage-card">
+      <div class="storage-card-title">📊 Storage Usage</div>
+      <div class="storage-card-bar">
+        <div class="storage-card-fill" id="storageFill" style="width:0%"></div>
+      </div>
+      <div class="storage-card-text">
+        <span id="storageUsed">0 files used</span>
+        <span>AWS S3</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon purple">📁</div>
+      <div class="stat-info"><h3 id="totalFiles">0</h3><p>Total Files</p></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon cyan">🖼️</div>
+      <div class="stat-info"><h3 id="imageCount">0</h3><p>Images</p></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">📄</div>
+      <div class="stat-info"><h3 id="docCount">0</h3><p>Documents</p></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon orange">🎬</div>
+      <div class="stat-info"><h3 id="otherCount">0</h3><p>Others</p></div>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div class="alert alert-success" id="successMsg">✅ <span id="successText"></span></div>
+  <div class="alert alert-error" id="errorMsg">❌ <span id="errorText"></span></div>
+
+  <!-- Upload -->
+  <div class="section-header">
+    <div>
+      <div class="section-title">Upload Files</div>
+      <div class="section-sub">Drag & drop or click to upload</div>
+    </div>
+  </div>
+  <div class="upload-area" id="uploadArea"
+    onclick="document.getElementById('fileInput').click()"
+    ondragover="handleDragOver(event)"
+    ondragleave="handleDragLeave(event)"
+    ondrop="handleDrop(event)">
+    <span class="upload-icon">📤</span>
+    <h3>Drop files here</h3>
+    <p>Any file type — stored securely on AWS S3</p>
+    <button class="upload-btn" onclick="event.stopPropagation();document.getElementById('fileInput').click()">
+      Choose File
+    </button>
+    <input type="file" id="fileInput" onchange="uploadFile(event)"/>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <div class="progress-text" id="progressText">Uploading...</div>
+    </div>
+  </div>
+
+  <!-- Files -->
+  <div class="files-section">
+    <div class="files-header">
+      <h3>📂 My Files</h3>
+      <button class="refresh-btn" onclick="loadFiles()">🔄 Refresh</button>
+    </div>
+    <div id="filesContainer">
+      <div class="loading"><div class="spinner"></div><p>Loading files...</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal">
+    <h3>🔗 Share File</h3>
+    <p>Anyone with this link can download for 24 hours</p>
+    <div class="share-link-box">
+      <input type="text" class="share-link-input" id="shareLinkInput" readonly/>
+      <button class="copy-btn" onclick="copyShareLink()">📋 Copy</button>
+    </div>
+    <div class="expire-note">⚠️ Link expires in 24 hours</div>
+    <button class="modal-close" onclick="closeModal('shareModal')">Close</button>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal">
+    <h3>👤 My Profile</h3>
+    <p>Your CloudVault account details</p>
+    <div class="profile-modal-avatar" id="profileModalAvatar">?</div>
+    <div class="profile-modal-name" id="profileModalName">User</div>
+    <div class="profile-modal-email" id="profileModalEmail">user@email.com</div>
+    <div class="profile-info-grid">
+      <div class="profile-info-item">
+        <div class="pii-label">Account Type</div>
+        <div class="pii-val">👤 Standard</div>
+      </div>
+      <div class="profile-info-item">
+        <div class="pii-label">Region</div>
+        <div class="pii-val">🇮🇳 Mumbai</div>
+      </div>
+      <div class="profile-info-item">
+        <div class="pii-label">Storage</div>
+        <div class="pii-val">☁️ AWS S3</div>
+      </div>
+      <div class="profile-info-item">
+        <div class="pii-label">Total Files</div>
+        <div class="pii-val" id="profileTotalFiles">0</div>
+      </div>
+    </div>
+    <button class="modal-close" onclick="closeModal('profileModal')">Close</button>
+  </div>
+</div>
+
+<!-- Storage Modal -->
+<div class="modal-overlay" id="storageModal">
+  <div class="modal">
+    <h3>☁️ My Storage</h3>
+    <p>Your AWS S3 storage breakdown</p>
+    <div class="profile-info-grid">
+      <div class="profile-info-item">
+        <div class="pii-label">📁 Total Files</div>
+        <div class="pii-val" id="stTotalFiles">0</div>
+      </div>
+      <div class="profile-info-item">
+        <div class="pii-label">🖼️ Images</div>
+        <div class="pii-val" id="stImages">0</div>
+      </div>
+      <div class="profile-info-item">
+        <div class="pii-label">📄 Documents</div>
+        <div class="pii-val" id="stDocs">0</div>
+      </div>
+      <div class="profile-info-item">
+        <div class="pii-label">🎬 Others</div>
+        <div class="pii-val" id="stOthers">0</div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px;">
+        <span>Storage Used</span><span id="stPercent">0%</span>
+      </div>
+      <div class="storage-card-bar" style="height:10px;">
+        <div class="storage-card-fill" id="stBar" style="width:0%;height:100%;"></div>
+      </div>
+    </div>
+    <button class="modal-close" onclick="closeModal('storageModal')">Close</button>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h3>⚙️ Settings</h3>
+    <p>Customize your CloudVault experience</p>
+    <div class="settings-item">
+      <div class="settings-item-left">
+        <h4>🌙 Dark Mode</h4>
+        <p>Toggle between dark and light theme</p>
+      </div>
+      <button class="toggle-switch" id="darkModeToggle" onclick="toggleThemeFromSettings()"></button>
+    </div>
+    <div class="settings-item">
+      <div class="settings-item-left">
+        <h4>🔔 Notifications</h4>
+        <p>Show upload and activity alerts</p>
+      </div>
+      <button class="toggle-switch on" id="notifToggle" onclick="this.classList.toggle('on')"></button>
+    </div>
+    <div class="settings-item">
+      <div class="settings-item-left">
+        <h4>🔒 Auto Logout</h4>
+        <p>Sign out after 30 minutes inactivity</p>
+      </div>
+      <button class="toggle-switch" id="autoLogout" onclick="this.classList.toggle('on')"></button>
+    </div>
+    <div class="settings-item">
+      <div class="settings-item-left">
+        <h4>📧 Email Alerts</h4>
+        <p>Get notified on file uploads</p>
+      </div>
+      <button class="toggle-switch on" id="emailAlerts" onclick="this.classList.toggle('on')"></button>
+    </div>
+    <button class="modal-close" onclick="closeModal('settingsModal')">Close</button>
+  </div>
+</div>
+
+<script>
+const API = "https://5ugd0epqe6.execute-api.ap-south-1.amazonaws.com/prod";
+const userId = localStorage.getItem("userId");
+const userName = localStorage.getItem("userName");
+const userEmail = localStorage.getItem("userEmail");
+
+if (!userId) window.location.href = "login.html";
+
+// ── INIT ──
+document.getElementById("profileName").innerText = userName || "User";
+document.getElementById("profileAvatar").innerText = (userName||"U")[0].toUpperCase();
+document.getElementById("welcomeName").innerText = userName || "User";
+document.getElementById("dropdownName").innerText = userName || "User";
+document.getElementById("dropdownEmail").innerText = userEmail || "";
+document.getElementById("profileModalAvatar").innerText = (userName||"U")[0].toUpperCase();
+document.getElementById("profileModalName").innerText = userName || "User";
+document.getElementById("profileModalEmail").innerText = userEmail || "";
+
+// ── THEME ──
+let isDark = true;
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.classList.toggle("light");
+  document.getElementById("themeBtn").innerText = isDark ? "🌙" : "☀️";
+  const toggle = document.getElementById("darkModeToggle");
+  if (isDark) toggle.classList.remove("on");
+  else toggle.classList.add("on");
+}
+function toggleThemeFromSettings() {
+  toggleTheme();
+  document.getElementById("darkModeToggle").classList.toggle("on");
+}
+
+// ── NOTIFICATIONS ──
+function toggleNotif() {
+  document.getElementById("notifDropdown").classList.toggle("show");
+  document.getElementById("profileDropdown").classList.remove("show");
+  document.getElementById("profileArrow").classList.remove("open");
+}
+function markRead(item) {
+  item.classList.remove("unread");
+  item.querySelector(".notif-dot").classList.add("read");
+  updateBadge();
+}
+function markAllRead() {
+  document.querySelectorAll(".notif-item").forEach(i => {
+    i.classList.remove("unread");
+    i.querySelector(".notif-dot").classList.add("read");
+  });
+  updateBadge();
+}
+function updateBadge() {
+  const count = document.querySelectorAll(".notif-item.unread").length;
+  const badge = document.getElementById("notifBadge");
+  badge.innerText = count;
+  badge.style.display = count > 0 ? "flex" : "none";
+}
+
+// ── PROFILE DROPDOWN ──
+function toggleProfile() {
+  document.getElementById("profileDropdown").classList.toggle("show");
+  document.getElementById("profileArrow").classList.toggle("open");
+  document.getElementById("notifDropdown").classList.remove("show");
+}
+
+// ── MODALS ──
+function openProfileModal() {
+  closeAllDropdowns();
+  document.getElementById("profileTotalFiles").innerText =
+    document.getElementById("totalFiles").innerText;
+  document.getElementById("profileModal").classList.add("show");
+}
+function openStorageModal() {
+  closeAllDropdowns();
+  const total = parseInt(document.getElementById("totalFiles").innerText);
+  const images = parseInt(document.getElementById("imageCount").innerText);
+  const docs = parseInt(document.getElementById("docCount").innerText);
+  const others = parseInt(document.getElementById("otherCount").innerText);
+  const pct = total > 0 ? Math.min(total * 5, 100) : 0;
+  document.getElementById("stTotalFiles").innerText = total;
+  document.getElementById("stImages").innerText = images;
+  document.getElementById("stDocs").innerText = docs;
+  document.getElementById("stOthers").innerText = others;
+  document.getElementById("stPercent").innerText = pct + "%";
+  document.getElementById("stBar").style.width = pct + "%";
+  document.getElementById("storageModal").classList.add("show");
+}
+function openSettingsModal() {
+  closeAllDropdowns();
+  document.getElementById("settingsModal").classList.add("show");
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove("show");
+}
+function closeAllDropdowns() {
+  document.getElementById("profileDropdown").classList.remove("show");
+  document.getElementById("profileArrow").classList.remove("open");
+  document.getElementById("notifDropdown").classList.remove("show");
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".profile-wrap") && !e.target.closest("#notifBtn")) {
+    closeAllDropdowns();
+  }
+});
+
+// ── LOAD FILES ──
+let allFiles = [];
+async function loadFiles() {
+  document.getElementById("filesContainer").innerHTML = `
+    <div class="loading"><div class="spinner"></div><p>Loading your files...</p></div>`;
+  try {
+    const res = await fetch(`${API}/user`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"listfiles",userId})
+    });
+    const data = await res.json();
+    allFiles = data.files || [];
+    renderFiles(allFiles);
+    updateStorageBars(allFiles.length);
+  } catch(err) {
+    showError("Failed to load files!");
+  }
+}
+
+function updateStorageBars(count) {
+  const pct = Math.min(count * 5, 100);
+  document.getElementById("navStorageFill").style.width = pct + "%";
+  document.getElementById("navStorageText").innerText = count + " files";
+  document.getElementById("storageFill").style.width = pct + "%";
+  document.getElementById("storageUsed").innerText = count + " files used";
+}
+
+function renderFiles(files) {
+  document.getElementById("totalFiles").innerText = files.length;
+  document.getElementById("imageCount").innerText =
+    files.filter(f=>f.fileType&&f.fileType.startsWith("image/")).length;
+  document.getElementById("docCount").innerText =
+    files.filter(f=>f.fileType&&(f.fileType.includes("pdf")||f.fileType.includes("doc")||f.fileType.includes("text"))).length;
+  document.getElementById("otherCount").innerText =
+    files.filter(f=>f.fileType&&(f.fileType.startsWith("video/")||f.fileType.startsWith("audio/"))).length;
+
+  if (files.length === 0) {
+    document.getElementById("filesContainer").innerHTML = `
+      <div class="empty-state">
+        <span>📭</span>
+        <h3>No files yet</h3>
+        <p>Upload your first file above!</p>
+      </div>`;
+    return;
+  }
+
+  const rows = files.map(file => {
+    const icon = getFileIcon(file.fileType);
+    const cls = getIconClass(file.fileType);
+    const date = new Date(file.uploadedAt).toLocaleDateString("en-IN",{
+      day:"numeric",month:"short",year:"numeric"
+    });
+    return `<tr>
+      <td>
+        <div class="file-name-cell">
+          <div class="file-type-icon ${cls}">${icon}</div>
+          <div>
+            <div class="file-name">${file.fileName}</div>
+            <div class="file-date">${date}</div>
+          </div>
+        </div>
+      </td>
+      <td style="color:var(--muted);font-size:12px;">${file.fileType||"Unknown"}</td>
+      <td>
+        <div class="action-btns">
+          <button class="action-btn btn-download" onclick="downloadFile('${file.file_id}')">📥 Download</button>
+          <button class="action-btn btn-share" onclick="shareFile('${file.file_id}')">🔗 Share</button>
+          <button class="action-btn btn-delete" onclick="deleteFile('${file.file_id}','${file.fileName}')">🗑️ Delete</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("filesContainer").innerHTML = `
+    <table class="files-table">
+      <thead><tr>
+        <th>File Name</th>
+        <th>Type</th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ── UPLOAD ──
+async function uploadFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  document.getElementById("progressWrap").style.display = "block";
+  document.getElementById("progressText").innerText = `Uploading ${file.name}...`;
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const base64 = e.target.result.split(",")[1];
+    try {
+      const res = await fetch(`${API}/user`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          action:"upload",userId,
+          fileName:file.name,fileContent:base64,fileType:file.type
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById("progressText").innerText = "✅ Upload complete!";
+        showSuccess(`${file.name} uploaded successfully!`);
+        setTimeout(()=>{
+          document.getElementById("progressWrap").style.display="none";
+          loadFiles();
+        },1500);
+      } else {
+        showError(data.message||"Upload failed!");
+        document.getElementById("progressWrap").style.display="none";
+      }
+    } catch(err) {
+      showError("Upload failed!");
+      document.getElementById("progressWrap").style.display="none";
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── DOWNLOAD ──
+async function downloadFile(file_id) {
+  try {
+    const res = await fetch(`${API}/user`,{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"downloadfile",file_id})
+    });
+    const data = await res.json();
+    if (res.ok) window.open(data.downloadUrl,"_blank");
+    else showError("Download failed!");
+  } catch(err){showError("Download failed!");}
+}
+
+// ── SHARE ──
+async function shareFile(file_id) {
+  try {
+    const res = await fetch(`${API}/user`,{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"sharefile",file_id})
+    });
+    const data = await res.json();
+    if (res.ok) {
+      document.getElementById("shareLinkInput").value = data.shareUrl;
+      document.getElementById("shareModal").classList.add("show");
+    } else showError("Share failed!");
+  } catch(err){showError("Share failed!");}
+}
+
+// ── DELETE ──
+async function deleteFile(file_id,fileName) {
+  if (!confirm(`Delete "${fileName}"? This cannot be undone.`)) return;
+  try {
+    const res = await fetch(`${API}/user`,{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"deletefile",file_id})
+    });
+    const data = await res.json();
+    if (res.ok) {showSuccess(`${fileName} deleted!`);loadFiles();}
+    else showError(data.message||"Delete failed!");
+  } catch(err){showError("Delete failed!");}
+}
+
+// ── SHARE MODAL ──
+function copyShareLink() {
+  navigator.clipboard.writeText(document.getElementById("shareLinkInput").value);
+  showSuccess("Link copied to clipboard!");
+}
+
+// ── DRAG DROP ──
+function handleDragOver(e){e.preventDefault();document.getElementById("uploadArea").classList.add("dragover");}
+function handleDragLeave(e){document.getElementById("uploadArea").classList.remove("dragover");}
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById("uploadArea").classList.remove("dragover");
+  const file=e.dataTransfer.files[0];
+  if(file) uploadFile({target:{files:[file]}});
+}
+
+// ── HELPERS ──
+function getFileIcon(t){
+  if(!t)return"📄";
+  if(t.startsWith("image/"))return"🖼️";
+  if(t.startsWith("video/"))return"🎬";
+  if(t.startsWith("audio/"))return"🎵";
+  if(t.includes("pdf"))return"📕";
+  if(t.includes("doc"))return"📝";
+  if(t.includes("sheet")||t.includes("csv"))return"📊";
+  if(t.includes("zip")||t.includes("rar"))return"📦";
+  return"📄";
+}
+function getIconClass(t){
+  if(!t)return"other";
+  if(t.startsWith("image/"))return"img";
+  if(t.startsWith("video/"))return"vid";
+  if(t.startsWith("audio/"))return"aud";
+  if(t.includes("pdf")||t.includes("doc"))return"doc";
+  return"other";
+}
+function showSuccess(msg){
+  document.getElementById("successText").innerText=msg;
+  document.getElementById("successMsg").style.display="flex";
+  setTimeout(()=>document.getElementById("successMsg").style.display="none",4000);
+}
+function showError(msg){
+  document.getElementById("errorText").innerText=msg;
+  document.getElementById("errorMsg").style.display="flex";
+  setTimeout(()=>document.getElementById("errorMsg").style.display="none",4000);
+}
+function logout(){localStorage.clear();window.location.href="login.html";}
+
+loadFiles();
+</script>
+</body>
+</html>
